@@ -1,0 +1,43 @@
+name: Push-to-EC2
+
+# Trigger deployment only on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2 on main branch push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout file dari Github
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server EC2 AWS
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /var/www/laravel
+            sudo bash -c 'echo "APP_URL=https://${{ secrets.HOST_DNS }}" >> .env'
+            sudo bash -c 'echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env'
+            sudo bash -c 'echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env'
+            sudo bash -c 'echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env'
+            sudo bash -c 'echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env'
+            sudo php artisan key:generate
+            sudo php artisan config:cache
+            sudo php artisan route:cache
+            sudo php artisan view:cache
+            sudo systemctl restart apache2
