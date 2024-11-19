@@ -30,9 +30,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo chown -R ubuntu:www-data /var/www/laravel
-            sudo chmod -R 775 /var/www/laravel
             cd /var/www/laravel
+            sudo cp .env.example .env
             sudo bash -c 'echo "APP_URL=https://${{ secrets.HOST_DNS }}" >> .env'
             sudo bash -c 'echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env'
             sudo bash -c 'echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env'
