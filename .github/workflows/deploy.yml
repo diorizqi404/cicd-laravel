@@ -30,12 +30,15 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            sudo chown -R ubuntu:www-data /var/www/laravel
+            sudo chmod -R 775 /var/www/laravel
             cd /var/www/laravel
             sudo bash -c 'echo "APP_URL=https://${{ secrets.HOST_DNS }}" >> .env'
             sudo bash -c 'echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env'
             sudo bash -c 'echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env'
             sudo bash -c 'echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env'
             sudo bash -c 'echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env'
+            sudo composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
             sudo php artisan key:generate
             sudo php artisan config:cache
             sudo php artisan route:cache
